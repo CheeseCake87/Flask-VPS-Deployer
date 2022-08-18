@@ -31,14 +31,23 @@ class Deploy(Project):
         if not os.path.exists("/etc/supervisor.d/"):
             os.mkdir("/etc/supervisor.d")
 
-        with open(f"/etc/supervisor.d/{self.project_name}.ini", mode="w") as supervisor_config:
-            supervisor_config.write(
-                Resources.supervisor_config.replace(
-                    "::project_path::", self.project_path
-                ).replace(
-                    "::user::", self.config['DEPLOY']['username']
-                )
-            )
+        if self.config.has_section("GUNICORN") and self.config.has_section("DEPLOY"):
+            write_supervisor = True
+            if not self.config.has_option("GUNICORN", "run_file") and write_supervisor:
+                write_supervisor = False
+            if not self.config.has_option("NETWORK", "run_function") and write_supervisor:
+                write_supervisor = False
+            if write_supervisor:
+                with open(f"/etc/supervisor.d/{self.project_name}.ini", mode="w") as supervisor_config:
+                    supervisor_config.write(
+                        Resources.supervisor_config.replace(
+                            "::project_path::", self.project_path
+                        ).replace(
+                            "::user::", self.config['DEPLOY']['username']
+                        )
+                    )
+            else:
+                logging.info("=> GUNICORN Section is disabled or contains an error, supervisor update skipped.")
 
         if self.config.has_section("NETWORK"):
             write_network = True
@@ -63,4 +72,3 @@ class Deploy(Project):
                 logging.info("=> NETWORK Section is disabled or contains an error, network update skipped.")
 
         logging.info("=> Deployment complete, now do setup.py --install.")
-

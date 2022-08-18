@@ -29,7 +29,7 @@ iface eth0 inet static
     supervisor_config = """
 [program:flask]
 directory=::project_path::
-command=::project_path::/venv/bin/gunicorn -b 0.0.0.0:5000 -w 3 run:gunicorn
+command=::project_path::/venv/bin/gunicorn -b 0.0.0.0:5000 -w 3 --run_file--:--run_function--
 user=::user::
 autostart=true
 autorestart=true
